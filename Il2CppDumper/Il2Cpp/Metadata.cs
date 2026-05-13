@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -42,25 +42,23 @@ namespace Il2CppDumper
 
         public Metadata(Stream stream) : base(stream)
         {
-                        // Lê o magic, mas não valida
-            var magic = reader.ReadUInt32(); 
+            // BYPASS OXIDE: Lemos o magic, mas não validamos se é 0xFAB11BAF
+            var magic = ReadUInt32(); 
             Console.WriteLine($"Metadata Magic: 0x{magic:X}");
             
-            // Lê a versão
-            var version = reader.ReadInt32();
+            // Lê a versão original do arquivo
+            var version = ReadInt32();
             
-            // BYPASS OXIDE: Se a versão parecer inválida (muito alta ou negativa), 
-            // nós forçamos a versão 24 ou 29, que são as que o Oxide geralmente usa.
+            // BYPASS OXIDE: Se a versão for inválida (Oxide costuma bagunçar), forçamos a 24 ou 29
             if (version <= 0 || version > 100) 
             {
-                Console.WriteLine("Oxide detected! Forcing Metadata Version 24...");
+                Console.WriteLine("Oxide/Protection detected! Forcing Metadata Version 24 for compatibility...");
                 version = 24; 
             }
-            {
-                throw new NotSupportedException($"ERROR: Metadata file supplied is not a supported version[{version}].");
-            }
+
             Version = version;
             header = ReadClass<Il2CppGlobalMetadataHeader>(0);
+            
             if (version == 24)
             {
                 if (header.stringLiteralOffset == 264)
@@ -77,6 +75,7 @@ namespace Il2CppDumper
                     }
                 }
             }
+            
             imageDefs = ReadMetadataClassArray<Il2CppImageDefinition>(header.imagesOffset, header.imagesSize);
             if (Version == 24.2 && header.assembliesSize / 68 < imageDefs.Length)
             {
@@ -118,16 +117,16 @@ namespace Il2CppDumper
                 fieldRefs = ReadMetadataClassArray<Il2CppFieldRef>(header.fieldRefsOffset, header.fieldRefsSize);
                 if (Version < 27)
                 {
-                    metadataUsageLists = ReadMetadataClassArray<Il2CppMetadataUsageList>(header.metadataUsageListsOffset, header.metadataUsageListsCount);
-                    metadataUsagePairs = ReadMetadataClassArray<Il2CppMetadataUsagePair>(header.metadataUsagePairsOffset, header.metadataUsagePairsCount);
+                    metadataUsageLists = ReadMetadataClassArray<Il2CppMetadataUsageList>(header.metadataUsageListsOffset, (int)header.metadataUsageListsCount);
+                    metadataUsagePairs = ReadMetadataClassArray<Il2CppMetadataUsagePair>(header.metadataUsagePairsOffset, (int)header.metadataUsagePairsCount);
 
                     ProcessingMetadataUsage();
                 }
             }
             if (Version > 20 && Version < 29)
             {
-                attributeTypeRanges = ReadMetadataClassArray<Il2CppCustomAttributeTypeRange>(header.attributesInfoOffset, header.attributesInfoCount);
-                attributeTypes = ReadClassArray<int>(header.attributeTypesOffset, header.attributeTypesCount / 4);
+                attributeTypeRanges = ReadMetadataClassArray<Il2CppCustomAttributeTypeRange>(header.attributesInfoOffset, (int)header.attributesInfoCount);
+                attributeTypes = ReadClassArray<int>(header.attributeTypesOffset, (int)header.attributeTypesCount / 4);
             }
             if (Version >= 29)
             {
@@ -156,7 +155,7 @@ namespace Il2CppDumper
             }
             if (Version <= 24.1)
             {
-                rgctxEntries = ReadMetadataClassArray<Il2CppRGCTXDefinition>(header.rgctxEntriesOffset, header.rgctxEntriesCount);
+                rgctxEntries = ReadMetadataClassArray<Il2CppRGCTXDefinition>(header.rgctxEntriesOffset, (int)header.rgctxEntriesCount);
             }
         }
 
@@ -238,7 +237,6 @@ namespace Il2CppDumper
                     metadataUsageDic[(Il2CppMetadataUsage)usage][metadataUsagePair.destinationIndex] = decodedIndex;
                 }
             }
-            //metadataUsagesCount = metadataUsagePairs.Max(x => x.destinationIndex) + 1;
             metadataUsagesCount = metadataUsageDic.Max(x => x.Value.Select(y => y.Key).DefaultIfEmpty().Max()) + 1;
         }
 
