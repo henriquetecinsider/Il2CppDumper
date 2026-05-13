@@ -1,21 +1,22 @@
-name: Build Il2CppDumper
+name: Build Il2CppDumper 2026
 
 on:
   push:
     branches: [ "master", "main" ]
-  workflow_dispatch: # Permite que você clique no botão para rodar manualmente
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest # Usa Windows porque é mais fácil compilar .NET
+    # Atualizado para a versão mais recente do Windows Runner em 2026
+    runs-on: windows-latest 
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4 # Atualizado para v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4 # Atualizado para v4
       with:
-        dotnet-version: 6.0.x # Ou a versão que o seu fork exigir
+        dotnet-version: 8.0.x # Versão estável em 2026
 
     - name: Restore dependencies
       run: dotnet restore
@@ -24,7 +25,10 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      # RESOLVE O ERRO: Atualizado de v3 para v4
+      uses: actions/upload-artifact@v4 
       with:
-        name: Il2CppDumper-Build
-        path: bin/Release/ # O caminho onde o .exe será gerado
+        name: Il2CppDumper-Output
+        path: |
+          **/bin/Release/**/Il2CppDumper.exe
+          **/bin/Release/**/config.json
