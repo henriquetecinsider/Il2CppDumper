@@ -42,17 +42,20 @@ namespace Il2CppDumper
 
         public Metadata(Stream stream) : base(stream)
         {
-            var sanity = ReadUInt32();
-            if (sanity != 0xFAB11BAF)
+                        // Lê o magic, mas não valida
+            var magic = reader.ReadUInt32(); 
+            Console.WriteLine($"Metadata Magic: 0x{magic:X}");
+            
+            // Lê a versão
+            var version = reader.ReadInt32();
+            
+            // BYPASS OXIDE: Se a versão parecer inválida (muito alta ou negativa), 
+            // nós forçamos a versão 24 ou 29, que são as que o Oxide geralmente usa.
+            if (version <= 0 || version > 100) 
             {
-                throw new InvalidDataException("ERROR: Metadata file supplied is not valid metadata file.");
+                Console.WriteLine("Oxide detected! Forcing Metadata Version 24...");
+                version = 24; 
             }
-            var version = ReadInt32();
-            if (version < 0 || version > 1000)
-            {
-                throw new InvalidDataException("ERROR: Metadata file supplied is not valid metadata file.");
-            }
-            if (version < 16 || version > 31)
             {
                 throw new NotSupportedException($"ERROR: Metadata file supplied is not a supported version[{version}].");
             }
