@@ -15,14 +15,15 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 8.0.x # Mantemos o SDK 8 para compilar com velocidade
 
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Publish Executable
-      # O segredo está aqui: --self-contained true cria o EXE com a DLL embutida
-      run: dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o ./publish_output
+      # Forçamos o framework net6.0 para evitar o erro de 'multiple frameworks'
+      # O parâmetro -f net6.0 resolve o erro que você recebeu
+      run: dotnet publish -c Release -f net6.0 -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o ./publish_output
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
