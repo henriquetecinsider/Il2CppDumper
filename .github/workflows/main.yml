@@ -1,4 +1,4 @@
-name: Build Il2CppDumper 2026
+name: Build Il2CppDumper 2026 Final
 
 on:
   push:
@@ -7,28 +7,25 @@ on:
 
 jobs:
   build:
-    # Atualizado para a versão mais recente do Windows Runner em 2026
-    runs-on: windows-latest 
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4 # Atualizado para v4
+    - uses: actions/checkout@v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4 # Atualizado para v4
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x # Versão estável em 2026
+        dotnet-version: 8.0.x
 
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    - name: Publish Executable
+      # O segredo está aqui: --self-contained true cria o EXE com a DLL embutida
+      run: dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o ./publish_output
 
     - name: Upload Artifact
-      # RESOLVE O ERRO: Atualizado de v3 para v4
-      uses: actions/upload-artifact@v4 
+      uses: actions/upload-artifact@v4
       with:
-        name: Il2CppDumper-Output
-        path: |
-          **/bin/Release/**/Il2CppDumper.exe
-          **/bin/Release/**/config.json
+        name: Il2CppDumper-SingleExe
+        path: ./publish_output/Il2CppDumper.exe
