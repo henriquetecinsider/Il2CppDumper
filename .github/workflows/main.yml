@@ -1,1 +1,30 @@
+name: Build Il2CppDumper
 
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch: # Permite que você clique no botão para rodar manualmente
+
+jobs:
+  build:
+    runs-on: windows-latest # Usa Windows porque é mais fácil compilar .NET
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x # Ou a versão que o seu fork exigir
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Il2CppDumper-Build
+        path: bin/Release/ # O caminho onde o .exe será gerado
